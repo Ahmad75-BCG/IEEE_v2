@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:15
+    container_name: emis_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: emis_password
+      POSTGRES_DB: energy_db
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: .
+      dockerfile: data_ingestion/Dockerfile
+    container_name: emis_api
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+      - DATABASE_URL=postgresql://admin:emis_password@db:5432/energy_db
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    container_name: emis_ui
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+    ports:
+      - "8501:8501"
+    depends_on:
+      - backend
